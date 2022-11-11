@@ -21,8 +21,10 @@ namespace Game_of_Life
     /// </summary>
     public partial class MainWindow : Window
     {
-        const int CellsWidth = 80;
-        const int CellsHeight = 80;
+        Random rnd = new Random();
+
+        const int CellsWidth = 50;
+        const int CellsHeight = 50;
         Rectangle[,] field = new Rectangle[CellsHeight, CellsWidth];
         DispatcherTimer gameTime = new DispatcherTimer();
         public MainWindow()
@@ -30,10 +32,8 @@ namespace Game_of_Life
             InitializeComponent();
             gameTime.Interval = TimeSpan.FromSeconds(0.1);
             gameTime.Tick += GameTime_Tick;
-            Random rnd = new Random();
             myCanvas.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             myCanvas.Arrange(new Rect(0.0,0.0,myCanvas.DesiredSize.Width, myCanvas.DesiredSize.Height));
-
             for (int i = 0; i < CellsHeight; i++)
             {
                 for (int j = 0; j < CellsWidth; j++)
@@ -41,7 +41,7 @@ namespace Game_of_Life
                     Rectangle r = new Rectangle();
                     r.Width = myCanvas.ActualWidth / CellsWidth - 2.0;
                     r.Height = myCanvas.ActualHeight / CellsHeight - 2.0;
-                    r.Fill = rnd.Next(0, 2) == 1 ? Brushes.Cyan : Brushes.Red;
+                    r.Fill = Brushes.Cyan;
                     myCanvas.Children.Add(r);
                     Canvas.SetLeft(r, j * myCanvas.ActualWidth / CellsWidth);
                     Canvas.SetTop(r, i * myCanvas.ActualHeight / CellsHeight);
@@ -58,6 +58,15 @@ namespace Game_of_Life
 
         private void GameTime_Tick(object sender, EventArgs e)
         {
+            int cyanCounter = 0;
+            int redCounter = 0;
+            foreach(var x in field)
+            {
+                if (((Rectangle)x).Fill == Brushes.Cyan) cyanCounter++;
+                if (((Rectangle)x).Fill == Brushes.Red) redCounter++;
+            }
+            cyan.Content = "Death: " + cyanCounter;
+            red.Content = "Alive: " + redCounter;
             int[,] countNext = new int[CellsHeight, CellsWidth];
             
             for(int i=0;i<CellsHeight;i++)
@@ -102,15 +111,50 @@ namespace Game_of_Life
 
         private void ButtonTimer(object sender, RoutedEventArgs e)
         {
-            if (gameTime.IsEnabled)
+            if (sender == starte && gameTime.IsEnabled)
             {
                 gameTime.Stop();
                 ((Button)sender).Content = "Starte Animation";
             }
-            else
+            else if (sender == starte && !gameTime.IsEnabled)
             {
                 gameTime.Start();
                 ((Button)sender).Content = "Stoppe Animation";
+            }
+            if(sender == random)
+            {
+                for (int i = 0; i < CellsHeight; i++)
+                {
+                    for (int j = 0; j < CellsWidth; j++)
+                    {
+                        Rectangle r = new Rectangle();
+                        r.Width = myCanvas.ActualWidth / CellsWidth - 2.0;
+                        r.Height = myCanvas.ActualHeight / CellsHeight - 2.0;
+                        r.Fill = rnd.Next(0, 2) == 1 ? Brushes.Cyan : Brushes.Red;
+                        myCanvas.Children.Add(r);
+                        Canvas.SetLeft(r, j * myCanvas.ActualWidth / CellsWidth);
+                        Canvas.SetTop(r, i * myCanvas.ActualHeight / CellsHeight);
+                        r.MouseDown += R_MouseDown;
+                        field[i, j] = r;
+                    }
+                }
+                int cyanCounter = 0;
+                int redCounter = 0;
+                foreach (var x in field)
+                {
+                    if (((Rectangle)x).Fill == Brushes.Cyan) cyanCounter++;
+                    if (((Rectangle)x).Fill == Brushes.Red) redCounter++;
+                }
+                cyan.Content = "Death: " + cyanCounter;
+                red.Content = "Alive: " + redCounter;
+            }    
+            if(sender == reset)
+            {
+                gameTime.Stop();
+                foreach(var x in field)
+                {
+                    ((Rectangle)x).Fill = Brushes.Cyan;
+                }
             }
         }
     }
